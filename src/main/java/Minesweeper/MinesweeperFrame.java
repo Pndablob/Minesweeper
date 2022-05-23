@@ -1,19 +1,12 @@
-package gui;
+package Minesweeper;
 
 import javax.swing.*;
 import java.awt.event.*;
-import java.util.*;
 
 public class MinesweeperFrame implements MouseListener {
     public JFrame frame;
-
-
-    public MinesweeperFrame() {
-        frame = new JFrame("Minesweeper");
-    }
-
-
-
+    private JComboBox difficulty;
+    private JLabel minesLeft;
 
     public void mouseClicked(MouseEvent e) {}
 

@@ -1,4 +1,4 @@
-package gui;
+package Minesweeper;
 
 import javax.swing.*;
 

@@ -1,10 +1,15 @@
 package Minesweeper;
 
+import java.awt.*;
 import javax.swing.*;
 
 public class MineButton extends JButton {
     private int number;
     private boolean isMine;
+
+    public MineButton() {
+        super();
+    }
 
     public int getNumber() {
         return number;

@@ -1,25 +1,77 @@
 package Minesweeper;
 
 import javax.swing.*;
-import java.util.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Random;
 
-public class Minesweeper {
+public class Minesweeper extends JFrame implements MouseListener {
+    private JFrame frame;
+    private JPanel menuPanel;
+    private JPanel minePanel;
+    private JComboBox<Object> difficulty;
+    private JLabel time;
+    private JLabel minesLeft;
+
     private MineButton[][] grid;
     private int length;
     private int width;
     private int mines;
 
-    public Minesweeper(int length, int width) {
+    public Minesweeper(int len, int wid) {
+        super();
+        length = len;
+        width = wid;
+
         grid = new MineButton[length][width];
-        this.length = length;
-        this.width = width;
-    }
+        frame = new JFrame();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        menuPanel = new JPanel();
+        minePanel = new JPanel();
+        difficulty = new JComboBox<>();
+        time = new JLabel("000");
+        minesLeft = new JLabel();
 
-    public Minesweeper() {
-    }
+        menuPanel.setLayout(new GridLayout(3, 0));
+        minePanel.setLayout(new GridLayout(length, width));
 
-    public void setMines(int m) {
-        mines = m;
+        difficulty.addItem("Beginner");
+        difficulty.addItem("Intermediate");
+        difficulty.addItem("Expert");
+
+        menuPanel.add(difficulty);
+        menuPanel.add(minesLeft);
+        menuPanel.add(time);
+
+        // TODO: Button Icons
+        //ImageIcon icon = new ImageIcon("C:/Users/henry/IdeaProjects/GUIProject/src/main/resources/tile.png");
+        for (int l = 0; l < length; l++) {
+            for (int w = 0; w < width; w++) {
+                MineButton mb = grid[l][w] = new MineButton();//icon);
+                minePanel.add(grid[l][w]);
+                /* mb.setHorizontalTextPosition(JButton.CENTER);
+                mb.setVerticalTextPosition(JButton.CENTER);
+
+                mb.addComponentListener(new ComponentAdapter() {
+                    @Override
+                    public void componentResized(ComponentEvent e) {
+                        JButton btn = (JButton) e.getComponent();
+                        Dimension size = btn.getSize();
+                        Insets insets = btn.getInsets();
+                        size.width -= insets.left + insets.right;
+                        size.height -= insets.top + insets.bottom;
+                        if (size.width > size.height) {
+                            size.width = -1;
+                        } else {
+                            size.height = -1;
+                        }
+                        Image scaled = icon.getImage().getScaledInstance(size.width, size.height, Image.SCALE_SMOOTH);
+                        btn.setBorder(BorderFactory.createEmptyBorder());
+                        btn.setIcon(new ImageIcon(scaled));
+                    }
+                }); */
+            }
+        }
     }
 
     public void placeMines() {
@@ -37,37 +89,20 @@ public class Minesweeper {
         }
     }
 
-    public void difficulty() {
-        String[] options = {"Easy (10)", "Intermediate (40)", "Expert (99)", "Custom"};
-        int diff = JOptionPane.showOptionDialog(
-                null,
-                "Please select the difficulty",
-                "Difficulty",
-                JOptionPane.DEFAULT_OPTION,
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                options,
-                options[0]
-        );
-
-        if (diff == 0) {
-            mines = 10;
-        } else if (diff == 1) {
-            mines = 40;
-        } else if (diff == 2) {
-            mines = 99;
-        } /*else {
-            mines = inputCustomMines();
-        }
-        */
+    public void run() {
+        frame.add(menuPanel);
+        frame.add(minePanel);
+        frame.setSize(800, 800);
+        frame.setVisible(true);
     }
 
-    /*
-    public int inputCustomMines() {
-        return Integer.parseInt(JOptionPane.showInputDialog(
-                null,
-                "Please enter a custom number of mines"
-        ));
-    }
-     */
+    public void mouseClicked(MouseEvent e) {}
+
+    public void mousePressed(MouseEvent e) {}
+
+    public void mouseReleased(MouseEvent e) {}
+
+    public void mouseEntered(MouseEvent e) {}
+
+    public void mouseExited(MouseEvent e) {}
 }

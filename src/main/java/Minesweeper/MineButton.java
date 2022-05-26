@@ -8,7 +8,7 @@ public class MineButton extends JButton {
     private boolean isMine;
 
     public MineButton() {
-        super();
+
     }
 
     public int getNumber() {

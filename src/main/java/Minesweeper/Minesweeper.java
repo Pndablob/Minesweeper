@@ -45,33 +45,10 @@ public class Minesweeper extends JFrame implements MouseListener {
         menuPanel.add(minesLeft);
         menuPanel.add(time);
 
-        // TODO: Button icons autofill when resizing
-        //ImageIcon icon = new ImageIcon("C:/Users/henry/IdeaProjects/GUIProject/src/main/resources/tile.png");
         for (int l = 0; l < length; l++) {
             for (int w = 0; w < width; w++) {
                 MineButton mb = grid[l][w] = new MineButton();//icon);
                 minePanel.add(grid[l][w]);
-                /* mb.setHorizontalTextPosition(JButton.CENTER);
-                mb.setVerticalTextPosition(JButton.CENTER);
-
-                mb.addComponentListener(new ComponentAdapter() {
-                    @Override
-                    public void componentResized(ComponentEvent e) {
-                        JButton btn = (JButton) e.getComponent();
-                        Dimension size = btn.getSize();
-                        Insets insets = btn.getInsets();
-                        size.width -= insets.left + insets.right;
-                        size.height -= insets.top + insets.bottom;
-                        if (size.width > size.height) {
-                            size.width = -1;
-                        } else {
-                            size.height = -1;
-                        }
-                        Image scaled = icon.getImage().getScaledInstance(size.width, size.height, Image.SCALE_SMOOTH);
-                        btn.setBorder(BorderFactory.createEmptyBorder());
-                        btn.setIcon(new ImageIcon(scaled));
-                    }
-                }); */
             }
         }
     }
@@ -135,9 +112,18 @@ public class Minesweeper extends JFrame implements MouseListener {
 
     public void mousePressed(MouseEvent e) {}
 
-    public void mouseReleased(MouseEvent e) {}
-
     public void mouseEntered(MouseEvent e) {}
 
     public void mouseExited(MouseEvent e) {}
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (SwingUtilities.isRightMouseButton(e)) {
+            JButton btn = (JButton) e.getSource();
+            String[] xy = btn.getName().split(" ", 2);
+            int x = Integer.parseInt(xy[0]);
+            int y = Integer.parseInt(xy[1]);
+            GameEngine.buttonRightClicked(x, y);
+        }
+    }
 }

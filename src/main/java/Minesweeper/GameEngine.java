@@ -1,13 +1,16 @@
 package Minesweeper;
 
 public class GameEngine {
-    private Minesweeper iMS = new Minesweeper();
+    private static final Minesweeper iMS = new Minesweeper();
 
-    public void buttonClicked(int x, int y) {
+    public static void buttonClicked(int x, int y) {
 
     }
 
-    public void buttonRightClicked(int x, int y) {
+    public static void buttonRightClicked(int x, int y) {
+        MineButton[][] grid = iMS.getGrid();
+        MineButton mine = grid[x][y];
+        mine.setFlagged(!mine.isFlagged());
 
     }
 }

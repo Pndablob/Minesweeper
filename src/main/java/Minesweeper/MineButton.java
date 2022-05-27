@@ -11,7 +11,7 @@ public class MineButton extends JButton {
 
     public MineButton() {
         this.setBackground(new Color(171, 171, 171));
-        this.setFont(new Font("Arial", Font.BOLD, 16));
+        this.setFont(new Font("Comic Sans MS", Font.BOLD, 16));
     }
 
     public int getNumber() {

@@ -8,40 +8,47 @@ import java.util.Objects;
 import java.util.Random;
 
 /*
-TODO make board start with no tiles revealed
+
  */
 
 public class Minesweeper extends JFrame implements MouseListener {
     private JPanel menuPanel;
     private JPanel minePanel;
     private JPanel panel;
-    private JLabel time;
+    private JLabel clock;
     private JLabel flags;
     private MineButton[][] tiles;
-    private int[][] grid;
-    private int length;
-    private int width;
-    private int mines;
-    private int revealed;
     private Image mine;
     private Image flag;
+    private Timer timer;
+    private int length;
+    private int width;
+    private int time;
+    private int mines;
+    private int revealed = 0;
+    private final int DIFFICULTY;
     private final GameEngine gameEngine = new GameEngine(this);
 
     public Minesweeper(int m, int len, int wid) {
+        DIFFICULTY = m;
         mines = m;
         length = len;
         width = wid;
 
         tiles = new MineButton[length][width];
-        grid = new int[length][width];
         this.setTitle("Minesweeper");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setMinimumSize(new Dimension(1080, 1080));
         menuPanel = new JPanel();
         minePanel = new JPanel();
         panel = new JPanel();
-        time = new JLabel("Time: 000");
+        clock = new JLabel("Time: " + time);
         flags = new JLabel("Flags: " + mines);
+
+        timer = new Timer(1000, e -> {
+            time++;
+            clock.setText("Time: " + time);
+        });
 
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.add(menuPanel);
@@ -53,7 +60,7 @@ public class Minesweeper extends JFrame implements MouseListener {
         menuPanel.add(Box.createHorizontalGlue());
         menuPanel.add(flags);
         menuPanel.add(Box.createHorizontalGlue());
-        menuPanel.add(time);
+        menuPanel.add(clock);
         menuPanel.add(Box.createHorizontalGlue());
 
         try {
@@ -70,10 +77,11 @@ public class Minesweeper extends JFrame implements MouseListener {
         while (count < mines) {
             x = r.nextInt(length);
             y = r.nextInt(width);
+            MineButton mb = tiles[x][y];
 
-            if (!tiles[x][y].isMine()) {
-                tiles[x][y].setMine(true);
-                grid[x][y] = -1;
+            if (!mb.isMine()) {
+                mb.setMine(true);
+                mb.setText(null);
                 count++;
             }
         }
@@ -83,10 +91,11 @@ public class Minesweeper extends JFrame implements MouseListener {
         for (int r = 0; r < length; r++) {
             for (int c = 0; c < width; c++) {
                 int count = 0;
-                MineButton btn = tiles[r][c];
+                MineButton mb = tiles[r][c];
 
                 // 8 buttons around tile
-                if (!btn.isMine()) {
+                if (!mb.isMine()) {
+
                     for (int k = -1; k <= 1; k++) {
                         for (int l = -1; l <= 1; l++) {
                             // in bounds
@@ -102,8 +111,7 @@ public class Minesweeper extends JFrame implements MouseListener {
                     }
                 }
 
-                btn.setNumber(count);
-                grid[r][c] = count;
+                mb.setNumber(count);
             }
         }
     }
@@ -113,6 +121,9 @@ public class Minesweeper extends JFrame implements MouseListener {
             for (int w = 0; w < width; w++) {
                 MineButton mb = tiles[l][w] = new MineButton();
                 mb.setName(l + " " + w);
+                if (!mb.isMine()) {
+                    mb.setText("");
+                }
                 minePanel.add(tiles[l][w]);
                 mb.addActionListener(gameEngine);
                 mb.addMouseListener(this);
@@ -132,50 +143,81 @@ public class Minesweeper extends JFrame implements MouseListener {
     }
 
     public boolean won() {
-        return mines + revealed == length * width;
+        return DIFFICULTY == length * width - revealed;
     }
 
     public void updateFlags() {
         flags.setText("Flags: " + mines);
     }
 
+    public void resetBoard() {
+        minePanel.removeAll();
+        timer.stop();
+        time = 0;
+        clock.setText("Time: " + time);
+        revealed = 0;
+        mines = DIFFICULTY;
+        flags.setText("Flags: " + mines);
+    }
+
+    public void gameEnd(boolean w) {
+        timer.stop();
+        String msg, title;
+        if (w) {
+            msg = "You Win!";
+            title = "You Win!";
+        } else {
+            msg = "You lost! Better luck next time!";
+            title = "You Lost!";
+        }
+
+        String[] options = {"Quit", "Change Difficulty", "Play Again"};
+        int sel = JOptionPane.showOptionDialog(
+                null,
+                msg,
+                title,
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        if (sel == 0) {
+            System.exit(0);
+        } else if (sel == 1) {
+            this.dispose();
+            Main.main(null);
+        } else if (sel == 2) {
+            this.dispose();
+            resetBoard();
+            run();
+        }
+    }
+
     // when tile is clicked
     public void buttonClicked(int x, int y) {
+        if (revealed == 0) {
+            timer.start();
+        }
         MineButton tile = tiles[x][y];
         if (tile.isMine() && !tile.isFlagged()) {
-            tile.setIcon(new ImageIcon(mine));
-            tile.setBackground(Color.RED);
+            if (revealed == 0) {
+                this.dispose();
+                resetBoard();
+                run();
+            } else {
+                tile.setIcon(new ImageIcon(mine));
+                tile.setBackground(Color.RED);
 
-            String[] options = {"Quit", "Restart This Level", "Play Again"};
-            int sel = JOptionPane.showOptionDialog(
-                    null,
-                    "You Lose!",
-                    "Game Over!",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.ERROR_MESSAGE,
-                    null,
-                    options,
-                    options[0]
-            );
-        } else if (!tile.isFlagged() && !tile.isRevealed()) {
-            if (won()) {
-                String[] options = {"Quit", "Change Difficulty", "Play Again"};
-                JOptionPane.showOptionDialog(
-                        null,
-                        "You Won!",
-                        "You Won!",
-                        JOptionPane.DEFAULT_OPTION,
-                        JOptionPane.PLAIN_MESSAGE,
-                        null,
-                        options,
-                        options[0]
-                );
-                return;
+                gameEnd(false);
             }
-
+        } else if (!tile.isFlagged() && !tile.isRevealed()) {
             tile.setBackground(Color.WHITE);
             tile.showNumber();
             tile.setRevealed(true);
+            revealed++;
+            System.out.println(revealed);
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {
                     if (tile.getNumber() != 0 || tile.isFlagged()) {
@@ -189,13 +231,17 @@ public class Minesweeper extends JFrame implements MouseListener {
                     }
                 }
             }
+
+            if (won()) {
+                gameEnd(true);
+            }
         }
     }
 
     // when tile is right-clicked (flagged)
     public void buttonRightClicked(int x, int y) {
         MineButton tile = tiles[x][y];
-        if (!tile.isFlagged() && tile.getNumber() == 0 && tile.isEnabled()) {
+        if (!tile.isRevealed() && !tile.isFlagged()) {
             tile.setFlagged(true);
             tile.setIcon(new ImageIcon(flag));
             mines--;

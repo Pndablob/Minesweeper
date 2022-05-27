@@ -7,6 +7,7 @@ public class MineButton extends JButton {
     private int number;
     private boolean isMine;
     private boolean isFlagged;
+    private boolean isRevealed;
 
     public MineButton() {
         this.setBackground(new Color(171, 171, 171));
@@ -25,10 +26,17 @@ public class MineButton extends JButton {
         return isFlagged;
     }
 
+    public boolean isRevealed() {
+        return isRevealed;
+    }
+
     public void setNumber(int n) {
         number = n;
-        if (n != 0) {
-            this.setForeground(numToColor(n));
+    }
+
+    public void showNumber() {
+        if (number != 0) {
+            this.setForeground(numToColor(number));
             this.setText(String.valueOf(number));
         }
     }
@@ -39,6 +47,10 @@ public class MineButton extends JButton {
 
     public void setFlagged(boolean flagged) {
         isFlagged = flagged;
+    }
+
+    public void setRevealed(boolean revealed) {
+        isRevealed = revealed;
     }
 
     public Color numToColor(int n) {

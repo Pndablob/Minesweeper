@@ -157,7 +157,7 @@ public class Minesweeper extends JFrame implements MouseListener {
                     options,
                     options[0]
             );
-        } else if (!tile.isMine() && tile.getNumber() == 0) {
+        } else if (!tile.isFlagged() && !tile.isRevealed()) {
             if (won()) {
                 String[] options = {"Quit", "Change Difficulty", "Play Again"};
                 JOptionPane.showOptionDialog(
@@ -170,10 +170,12 @@ public class Minesweeper extends JFrame implements MouseListener {
                         options,
                         options[0]
                 );
+                return;
             }
 
             tile.setBackground(Color.WHITE);
-            tile.setEnabled(false);
+            tile.showNumber();
+            tile.setRevealed(true);
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {
                     if (tile.getNumber() != 0 || tile.isFlagged()) {
@@ -197,22 +199,13 @@ public class Minesweeper extends JFrame implements MouseListener {
             tile.setFlagged(true);
             tile.setIcon(new ImageIcon(flag));
             mines--;
-            updateFlags();
         } else if (tile.isFlagged()) {
             tile.setFlagged(false);
             tile.setIcon(null);
             mines++;
-            updateFlags();
         }
+        updateFlags();
     }
-
-    public void mouseClicked(MouseEvent e) {}
-
-    public void mousePressed(MouseEvent e) {}
-
-    public void mouseEntered(MouseEvent e) {}
-
-    public void mouseExited(MouseEvent e) {}
 
     @Override
     public void mouseReleased(MouseEvent e) {
@@ -224,4 +217,12 @@ public class Minesweeper extends JFrame implements MouseListener {
             buttonRightClicked(x, y);
         }
     }
+
+    public void mouseClicked(MouseEvent e) {}
+
+    public void mousePressed(MouseEvent e) {}
+
+    public void mouseEntered(MouseEvent e) {}
+
+    public void mouseExited(MouseEvent e) {}
 }

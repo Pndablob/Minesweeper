@@ -6,13 +6,11 @@ import javax.swing.*;
 public class MineButton extends JButton {
     private int number;
     private boolean isMine;
-
     private boolean isFlagged;
 
     public MineButton() {
-        this.setBackground(Color.gray);
+        this.setBackground(new Color(171, 171, 171));
         this.setFont(new Font("Arial", Font.BOLD, 16));
-
     }
 
     public int getNumber() {

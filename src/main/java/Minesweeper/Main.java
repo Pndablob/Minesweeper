@@ -26,7 +26,7 @@ public class Main {
             d = 16;
         } else if (diff == 2) {
             mines = 99;
-            d = 25;
+            d = 24;
         }
 
         Minesweeper ms = new Minesweeper(mines, d, d);

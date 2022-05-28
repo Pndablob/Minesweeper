@@ -32,8 +32,9 @@ public class Main {
             w = 24;
         } else if (diff == 3) {
             m = 200;
-            h = 24; // max h for 1920x1080
-            w = 43; // max w for 1920x1080
+            // max height and width for 1920x1080 display
+            h = 24;
+            w = 43;
 
         } else if (diff == 4) {
             // custom height, width, and mines input

@@ -1,14 +1,16 @@
 package Minesweeper;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import javax.imageio.ImageIO;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Objects;
 import java.util.Random;
 
 /*
-5/27/2022
+5/28/2022
 Minesweeper game
  */
 public class Minesweeper extends JFrame implements MouseListener {
@@ -20,12 +22,16 @@ public class Minesweeper extends JFrame implements MouseListener {
     private MineButton[][] tiles;
     private Image mine;
     private Image flag;
+    private Image dead;
+    private Image tada;
     private Timer timer;
+    private BigDecimal startTime;
     private int height;
     private int width;
     private int time;
     private int mines;
-    private int revealed = 0;
+    private int revealed;
+    private boolean firstClick;
     private final int DIFFICULTY;
     private final GameEngine gameEngine = new GameEngine(this);
 
@@ -34,6 +40,8 @@ public class Minesweeper extends JFrame implements MouseListener {
         mines = m;
         height = len;
         width = wid;
+        revealed = 0;
+        firstClick = true;
 
         tiles = new MineButton[height][width];
         this.setTitle("Minesweeper");
@@ -45,9 +53,10 @@ public class Minesweeper extends JFrame implements MouseListener {
         clock = new JLabel("Time: " + time);
         flags = new JLabel("Flags: " + mines);
 
-        timer = new Timer(1000, e -> {
+        // Offset to account for Swing Timer inaccuracies. Determined by 1000s comparison test
+        timer = new Timer(991, e -> {
+            updateClock();
             time++;
-            clock.setText("Time: " + time);
         });
 
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -66,6 +75,8 @@ public class Minesweeper extends JFrame implements MouseListener {
         try {
             mine = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResource("mine.png"))).getScaledInstance(30, 30, Image.SCALE_SMOOTH);
             flag = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResource("flag.png"))).getScaledInstance(30, 30, Image.SCALE_SMOOTH);
+            dead = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("dead.png")));
+            tada = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("tada.png")));
         } catch (Exception e) {
             // Do nothing
         }
@@ -90,37 +101,52 @@ public class Minesweeper extends JFrame implements MouseListener {
         flags.setText("Flags: " + mines);
     }
 
+    // updates clock display
+    public void updateClock() {
+        clock.setText("Time: " + time);
+    }
+    
     // resets board after game end
     public void resetBoard() {
         minePanel.removeAll();
         timer.stop();
         time = 0;
-        clock.setText("Time: " + time);
+        updateClock();
+        startTime = new BigDecimal(0);
+        firstClick = true;
         revealed = 0;
         mines = DIFFICULTY;
-        flags.setText("Flags: " + mines);
+        updateFlags();
     }
 
     // game over (win/loss)
     public void gameEnd(boolean w) {
+        updateClock();
         timer.stop();
         String msg, title;
+        ImageIcon icon;
+        BigDecimal duration = new BigDecimal(System.currentTimeMillis()).subtract(startTime).setScale(3, RoundingMode.HALF_UP).divide(new BigDecimal(1000), RoundingMode.HALF_UP);
+
         if (w) {
-            msg = "You Win!";
-            title = "You Win!";
+            msg = "You Won, taking " + duration + " seconds";
+            title = "You Won!";
+            icon = new ImageIcon(tada);
         } else {
-            msg = "You lost! Better luck next time!";
+            msg = "You lost, wasting " + duration + " seconds. Better luck next time";
             title = "You Lost!";
+            icon = new ImageIcon(dead);
         }
 
+        JLabel label = new JLabel(msg);
+        label.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
         String[] options = {"Quit", "Change Difficulty", "Play Again"};
         int sel = JOptionPane.showOptionDialog(
                 null,
-                msg,
+                label,
                 title,
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.INFORMATION_MESSAGE,
-                null,
+                icon,
                 options,
                 options[0]
         );
@@ -182,7 +208,6 @@ public class Minesweeper extends JFrame implements MouseListener {
 
                 // 8 buttons around tile
                 if (!mb.isMine()) {
-
                     for (int k = -1; k <= 1; k++) {
                         for (int l = -1; l <= 1; l++) {
                             // in bounds
@@ -205,39 +230,48 @@ public class Minesweeper extends JFrame implements MouseListener {
 
     // when tile is left-clicked
     public void buttonClicked(int x, int y) {
-        if (revealed == 0) {
+        MineButton tile = tiles[x][y];
+        // start timer on first safe click
+        if (firstClick) {
+            firstClick = false;
+            startTime = new BigDecimal(System.currentTimeMillis());
+            time++;
             timer.start();
         }
-        MineButton tile = tiles[x][y];
-        if (!tile.isFlagged() && !tile.isRevealed() && !tile.isMine()) {
-            tile.setBackground(Color.WHITE);
-            tile.showNumber();
-            tile.setRevealed(true);
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    if (tile.getNumber() == 0 && !tile.isFlagged()) {
-                        try {
-                            buttonClicked(x + i, y + j);
-                        } catch (Exception e) {
-                            // Do nothing
+
+        if (!tile.isFlagged()) {
+            if (!tile.isRevealed() && !tile.isMine()) {
+                tile.setBackground(Color.WHITE);
+                tile.showNumber();
+                tile.setRevealed(true);
+                // auto reveal surrounding safe tiles
+                for (int i = -1; i <= 1; i++) {
+                    for (int j = -1; j <= 1; j++) {
+                        if (tile.getNumber() == 0) {
+                            try {
+                                buttonClicked(x + i, y + j);
+                            } catch (Exception e) {
+                                // Do nothing
+                            }
                         }
                     }
                 }
-            }
-            revealed++;
-            if (won()) {
-                gameEnd(true);
-            }
-        } else if (tile.isMine() && !tile.isFlagged()) {
-            if (revealed == 0) {
-                this.dispose();
-                resetBoard();
-                run();
-            } else {
-                tile.setIcon(new ImageIcon(mine));
-                tile.setBackground(Color.RED);
+                revealed++;
+                if (won()) {
+                    gameEnd(true);
+                }
+            } else if (tile.isMine()) {
+                // automatically restart if first click is a mine, in lieu of first-click-safety
+                if (firstClick) {
+                    this.dispose();
+                    resetBoard();
+                    run();
+                } else {
+                    tile.setIcon(new ImageIcon(mine));
+                    tile.setBackground(Color.RED);
 
-                gameEnd(false);
+                    gameEnd(false);
+                }
             }
         }
     }
@@ -245,7 +279,7 @@ public class Minesweeper extends JFrame implements MouseListener {
     // when tile is right-clicked (flagged)
     public void buttonRightClicked(int x, int y) {
         MineButton tile = tiles[x][y];
-        if (!tile.isRevealed() && !tile.isFlagged()) {
+        if (!tile.isRevealed() && !tile.isFlagged() && mines > 0) {
             tile.setFlagged(true);
             tile.setIcon(new ImageIcon(flag));
             mines--;

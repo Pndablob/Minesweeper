@@ -1,5 +1,7 @@
+# Added files
 /.idea/
 /Minesweeper.iml
+/src/main/resources/META-INF/
 
 # Compiled class file
 *.class

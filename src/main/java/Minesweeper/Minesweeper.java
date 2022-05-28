@@ -8,9 +8,9 @@ import java.util.Objects;
 import java.util.Random;
 
 /*
-
+5/27/2022
+Minesweeper game
  */
-
 public class Minesweeper extends JFrame implements MouseListener {
     private JPanel menuPanel;
     private JPanel minePanel;
@@ -21,7 +21,7 @@ public class Minesweeper extends JFrame implements MouseListener {
     private Image mine;
     private Image flag;
     private Timer timer;
-    private int length;
+    private int height;
     private int width;
     private int time;
     private int mines;
@@ -32,10 +32,10 @@ public class Minesweeper extends JFrame implements MouseListener {
     public Minesweeper(int m, int len, int wid) {
         DIFFICULTY = m;
         mines = m;
-        length = len;
+        height = len;
         width = wid;
 
-        tiles = new MineButton[length][width];
+        tiles = new MineButton[height][width];
         this.setTitle("Minesweeper");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setMinimumSize(new Dimension(1080, 1080));
@@ -55,7 +55,7 @@ public class Minesweeper extends JFrame implements MouseListener {
         panel.add(minePanel);
 
         menuPanel.setLayout(new BoxLayout(menuPanel, BoxLayout.X_AXIS));
-        minePanel.setLayout(new GridLayout(length, width));
+        minePanel.setLayout(new GridLayout(height, width));
 
         menuPanel.add(Box.createHorizontalGlue());
         menuPanel.add(flags);
@@ -71,69 +71,7 @@ public class Minesweeper extends JFrame implements MouseListener {
         }
     }
 
-    public void placeMines() {
-        Random r = new Random();
-        int x, y, count = 0;
-        while (count < mines) {
-            x = r.nextInt(length);
-            y = r.nextInt(width);
-            MineButton mb = tiles[x][y];
-
-            if (!mb.isMine()) {
-                mb.setMine(true);
-                mb.setText(null);
-                count++;
-            }
-        }
-    }
-
-    public void setNumbers() {
-        for (int r = 0; r < length; r++) {
-            for (int c = 0; c < width; c++) {
-                int count = 0;
-                MineButton mb = tiles[r][c];
-
-                // 8 buttons around tile
-                if (!mb.isMine()) {
-
-                    for (int k = -1; k <= 1; k++) {
-                        for (int l = -1; l <= 1; l++) {
-                            // in bounds
-                            try {
-                                assert tiles[r + k] != null;
-                                if (tiles[r + k][c + l].isMine()) {
-                                    count++;
-                                }
-                            } catch (Exception e) {
-                                // catch edge cases
-                            }
-                        }
-                    }
-                }
-
-                mb.setNumber(count);
-            }
-        }
-    }
-
-    public void setup() {
-        for (int l = 0; l < length; l++) {
-            for (int w = 0; w < width; w++) {
-                MineButton mb = tiles[l][w] = new MineButton();
-                mb.setName(l + " " + w);
-                if (!mb.isMine()) {
-                    mb.setText("");
-                }
-                minePanel.add(tiles[l][w]);
-                mb.addActionListener(gameEngine);
-                mb.addMouseListener(this);
-            }
-        }
-
-        placeMines();
-        setNumbers();
-    }
-
+    // run
     public void run() {
         this.add(panel);
         this.setSize(1080, 1080);
@@ -142,14 +80,17 @@ public class Minesweeper extends JFrame implements MouseListener {
         setup();
     }
 
+    // checks if game is won
     public boolean won() {
-        return DIFFICULTY == length * width - revealed;
+        return DIFFICULTY == height * width - revealed;
     }
 
+    // update flag display
     public void updateFlags() {
         flags.setText("Flags: " + mines);
     }
 
+    // resets board after game end
     public void resetBoard() {
         minePanel.removeAll();
         timer.stop();
@@ -160,6 +101,7 @@ public class Minesweeper extends JFrame implements MouseListener {
         flags.setText("Flags: " + mines);
     }
 
+    // game over (win/loss)
     public void gameEnd(boolean w) {
         timer.stop();
         String msg, title;
@@ -195,13 +137,98 @@ public class Minesweeper extends JFrame implements MouseListener {
         }
     }
 
-    // when tile is clicked
+    // declaring tiles
+    public void setup() {
+        for (int l = 0; l < height; l++) {
+            for (int w = 0; w < width; w++) {
+                MineButton mb = tiles[l][w] = new MineButton();
+                mb.setName(l + " " + w);
+                if (!mb.isMine()) {
+                    mb.setText("");
+                }
+                minePanel.add(tiles[l][w]);
+                mb.addActionListener(gameEngine);
+                mb.addMouseListener(this);
+            }
+        }
+
+        placeMines();
+        setNumbers();
+    }
+
+    // placing mines randomly
+    public void placeMines() {
+        Random r = new Random();
+        int x, y, count = 0;
+        while (count < mines) {
+            x = r.nextInt(height);
+            y = r.nextInt(width);
+            MineButton mb = tiles[x][y];
+
+            if (!mb.isMine()) {
+                mb.setMine(true);
+                mb.setText(null);
+                count++;
+            }
+        }
+    }
+
+    // counts number of mines around each tile and gives respective number
+    public void setNumbers() {
+        for (int r = 0; r < height; r++) {
+            for (int c = 0; c < width; c++) {
+                int count = 0;
+                MineButton mb = tiles[r][c];
+
+                // 8 buttons around tile
+                if (!mb.isMine()) {
+
+                    for (int k = -1; k <= 1; k++) {
+                        for (int l = -1; l <= 1; l++) {
+                            // in bounds
+                            try {
+                                assert tiles[r + k] != null;
+                                if (tiles[r + k][c + l].isMine()) {
+                                    count++;
+                                }
+                            } catch (Exception e) {
+                                // catch edge cases
+                            }
+                        }
+                    }
+                }
+
+                mb.setNumber(count);
+            }
+        }
+    }
+
+    // when tile is left-clicked
     public void buttonClicked(int x, int y) {
         if (revealed == 0) {
             timer.start();
         }
         MineButton tile = tiles[x][y];
-        if (tile.isMine() && !tile.isFlagged()) {
+        if (!tile.isFlagged() && !tile.isRevealed() && !tile.isMine()) {
+            tile.setBackground(Color.WHITE);
+            tile.showNumber();
+            tile.setRevealed(true);
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    if (tile.getNumber() == 0 && !tile.isFlagged()) {
+                        try {
+                            buttonClicked(x + i, y + j);
+                        } catch (Exception e) {
+                            // Do nothing
+                        }
+                    }
+                }
+            }
+            revealed++;
+            if (won()) {
+                gameEnd(true);
+            }
+        } else if (tile.isMine() && !tile.isFlagged()) {
             if (revealed == 0) {
                 this.dispose();
                 resetBoard();
@@ -211,29 +238,6 @@ public class Minesweeper extends JFrame implements MouseListener {
                 tile.setBackground(Color.RED);
 
                 gameEnd(false);
-            }
-        } else if (!tile.isFlagged() && !tile.isRevealed()) {
-            tile.setBackground(Color.WHITE);
-            tile.showNumber();
-            tile.setRevealed(true);
-            revealed++;
-            System.out.println(revealed);
-            for (int i = -1; i <= 1; i++) {
-                for (int j = -1; j <= 1; j++) {
-                    if (tile.getNumber() != 0 || tile.isFlagged()) {
-                        continue;
-                    }
-                    try {
-                        buttonClicked(x + i, y + j);
-                    }
-                    catch (Exception e) {
-                        // Do nothing
-                    }
-                }
-            }
-
-            if (won()) {
-                gameEnd(true);
             }
         }
     }
@@ -253,6 +257,7 @@ public class Minesweeper extends JFrame implements MouseListener {
         updateFlags();
     }
 
+    // right click mouse event
     @Override
     public void mouseReleased(MouseEvent e) {
         if (SwingUtilities.isRightMouseButton(e)) {

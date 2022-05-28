@@ -11,6 +11,7 @@ class GameEngine implements ActionListener {
         ms = minesweeper;
     }
 
+    // left click on MineButton action event
     @Override
     public void actionPerformed(ActionEvent e) {
         JButton btn = (JButton) e.getSource();

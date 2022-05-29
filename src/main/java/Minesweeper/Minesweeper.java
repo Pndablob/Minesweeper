@@ -121,7 +121,6 @@ public class Minesweeper extends JFrame implements MouseListener {
 
     // game over (win/loss)
     public void gameEnd(boolean w) {
-        updateClock();
         timer.stop();
         String msg, title;
         ImageIcon icon;
@@ -262,7 +261,7 @@ public class Minesweeper extends JFrame implements MouseListener {
                 }
             } else if (tile.isMine()) {
                 // automatically restart if first click is a mine, in lieu of first-click-safety
-                if (firstClick) {
+                if (revealed == 0) {
                     this.dispose();
                     resetBoard();
                     run();

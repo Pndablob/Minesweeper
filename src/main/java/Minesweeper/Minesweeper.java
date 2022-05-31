@@ -150,7 +150,7 @@ public class Minesweeper extends JFrame implements MouseListener {
                 options[0]
         );
 
-        if (sel == 0) {
+        if (sel == 0 || sel == JOptionPane.CLOSED_OPTION) {
             System.exit(0);
         } else if (sel == 1) {
             this.dispose();

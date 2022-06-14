@@ -12,7 +12,8 @@ import java.util.Random;
 /*
 Minesweeper game
  */
-public class Minesweeper extends JFrame implements MouseListener, KeyListener {
+public class Minesweeper extends JFrame implements MouseListener {
+    private Action solveBoard;
     private JPanel menuPanel;
     private JPanel minePanel;
     private JPanel panel;
@@ -31,16 +32,18 @@ public class Minesweeper extends JFrame implements MouseListener, KeyListener {
     private int mines;
     private int revealed;
     private boolean firstClick;
+    private boolean stopRec;
     private final int DIFFICULTY;
-    //private final GameEngine gameEngine = new GameEngine(this);
 
-    public Minesweeper(int m, int len, int wid) {
+    public Minesweeper(int m, int h, int w) {
         DIFFICULTY = m;
         mines = m;
-        height = len;
-        width = wid;
+        height = h;
+        width = w;
         revealed = 0;
         firstClick = true;
+        stopRec = false;
+        solveBoard = new solveBoard(); // easter egg
 
         tiles = new MineButton[height][width];
         this.setTitle("Minesweeper");
@@ -139,6 +142,7 @@ public class Minesweeper extends JFrame implements MouseListener, KeyListener {
 
     // game over (win/loss)
     public void gameEnd(boolean w) {
+        stopRec = true;
         timer.stop();
         String msg, title;
         ImageIcon icon;
@@ -176,8 +180,8 @@ public class Minesweeper extends JFrame implements MouseListener, KeyListener {
             Main.main(null);
         } else if (sel == 2) {
             this.dispose();
-            resetBoard();
-            run();
+            Minesweeper ms = new Minesweeper(DIFFICULTY, height, width);
+            ms.run();
         }
     }
 
@@ -191,8 +195,11 @@ public class Minesweeper extends JFrame implements MouseListener, KeyListener {
                     mb.setText("");
                 }
                 minePanel.add(tiles[l][w]);
-                //mb.addActionListener(gameEngine);
                 mb.addMouseListener(this);
+                // easter egg
+                mb.getInputMap().put(KeyStroke.getKeyStroke('`'), "solveBoard");
+                mb.getActionMap().put("solveBoard", solveBoard);
+
             }
         }
 
@@ -248,6 +255,10 @@ public class Minesweeper extends JFrame implements MouseListener, KeyListener {
 
     // when tile is left-clicked
     public void buttonLeftClicked(int x, int y) {
+        // stop recursion on game end
+        if (stopRec) {
+            return;
+        }
         MineButton tile = tiles[x][y];
         // start timer on first safe click
         if (firstClick) {
@@ -312,7 +323,6 @@ public class Minesweeper extends JFrame implements MouseListener, KeyListener {
 
     // when tile is middle-clicked (quick reveal)
     public void buttonMiddleClicked(int x, int y) {
-        // quick reveal code
         MineButton tile = tiles[x][y];
 
         // count flags around tile
@@ -320,7 +330,7 @@ public class Minesweeper extends JFrame implements MouseListener, KeyListener {
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 try {
-                    MineButton tile2 = tiles[x+i][y+j];
+                    MineButton tile2 = tiles[x + i][y + j];
                     if (tile2.isFlagged()) {
                         f++;
                     }
@@ -335,7 +345,7 @@ public class Minesweeper extends JFrame implements MouseListener, KeyListener {
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {
                     try {
-                        buttonLeftClicked(x+i, y+j);
+                        buttonLeftClicked(x + i, y + j);
                     } catch (Exception e) {
                         // do nothing
                     }
@@ -376,11 +386,39 @@ public class Minesweeper extends JFrame implements MouseListener, KeyListener {
 
     public void mouseExited(MouseEvent e) {}
 
-    public void keyTyped(KeyEvent e) {}
-
-    public void keyPressed(KeyEvent e) {}
-
-    @Override
-    public void keyReleased(KeyEvent e) {
+    public class solveBoard extends AbstractAction {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            firstClick = false;
+            startTime = new BigDecimal(System.currentTimeMillis());
+            time++;
+            timer.start();
+            for (int r = 0; r < height; r++) {
+                for (int c = 0; c < width; c++) {
+                    MineButton tile = tiles[r][c];
+                    if (!tile.isRevealed()) {
+                        // remove false flags
+                        if (tile.isFlagged() && !tile.isMine()) {
+                            tile.setFlagged(false);
+                            tile.setIcon(null);
+                            mines++;
+                        }
+                        // flag
+                        if (tile.isMine()) {
+                            tile.setFlagged(true);
+                            tile.setIcon(new ImageIcon(flag));
+                            mines--;
+                        // reveal
+                        } else {
+                            tile.setBackground(Color.WHITE);
+                            tile.showNumber();
+                            tile.setRevealed(true);
+                        }
+                    }
+                    updateFlags();
+                }
+            }
+            gameEnd(true);
+        }
     }
 }

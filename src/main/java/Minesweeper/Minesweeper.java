@@ -10,10 +10,9 @@ import java.util.Objects;
 import java.util.Random;
 
 /*
-5/28/2022
 Minesweeper game
  */
-public class Minesweeper extends JFrame implements MouseListener {
+public class Minesweeper extends JFrame implements MouseListener, KeyListener {
     private JPanel menuPanel;
     private JPanel minePanel;
     private JPanel panel;
@@ -33,7 +32,7 @@ public class Minesweeper extends JFrame implements MouseListener {
     private int revealed;
     private boolean firstClick;
     private final int DIFFICULTY;
-    private final GameEngine gameEngine = new GameEngine(this);
+    //private final GameEngine gameEngine = new GameEngine(this);
 
     public Minesweeper(int m, int len, int wid) {
         DIFFICULTY = m;
@@ -119,6 +118,25 @@ public class Minesweeper extends JFrame implements MouseListener {
         updateFlags();
     }
 
+    // reveal mines upon game lose
+    public void revealMines() {
+        for (MineButton[] r : tiles) {
+            for (MineButton tile : r) {
+                if (tile.isMine()) {
+                    if (!tile.isFlagged() && !tile.isRevealed()) {
+                        // show remaining mines
+                        tile.setRevealed(true);
+                        tile.setIcon(new ImageIcon(mine));
+                        tile.setBackground(Color.RED);
+                    }
+                } else if (!tile.isMine() && tile.isFlagged()) {
+                    tile.setBackground(Color.ORANGE);
+                }
+            }
+        }
+    }
+
+
     // game over (win/loss)
     public void gameEnd(boolean w) {
         timer.stop();
@@ -127,11 +145,12 @@ public class Minesweeper extends JFrame implements MouseListener {
         BigDecimal duration = new BigDecimal(System.currentTimeMillis()).subtract(startTime).setScale(3, RoundingMode.HALF_UP).divide(new BigDecimal(1000), RoundingMode.HALF_UP);
 
         if (w) {
-            msg = "You Won, taking " + duration + " seconds";
+            msg = "You won in " + duration + " seconds";
             title = "You Won!";
             icon = new ImageIcon(tada);
         } else {
-            msg = "You lost, wasting " + duration + " seconds. Better luck next time";
+            revealMines();
+            msg = "You lost in " + duration + " seconds. Better luck next time";
             title = "You Lost!";
             icon = new ImageIcon(dead);
         }
@@ -150,7 +169,7 @@ public class Minesweeper extends JFrame implements MouseListener {
                 options[0]
         );
 
-        if (sel == 0) {
+        if (sel == 0 || sel == JOptionPane.CLOSED_OPTION) {
             System.exit(0);
         } else if (sel == 1) {
             this.dispose();
@@ -172,7 +191,7 @@ public class Minesweeper extends JFrame implements MouseListener {
                     mb.setText("");
                 }
                 minePanel.add(tiles[l][w]);
-                mb.addActionListener(gameEngine);
+                //mb.addActionListener(gameEngine);
                 mb.addMouseListener(this);
             }
         }
@@ -228,7 +247,7 @@ public class Minesweeper extends JFrame implements MouseListener {
     }
 
     // when tile is left-clicked
-    public void buttonClicked(int x, int y) {
+    public void buttonLeftClicked(int x, int y) {
         MineButton tile = tiles[x][y];
         // start timer on first safe click
         if (firstClick) {
@@ -248,7 +267,7 @@ public class Minesweeper extends JFrame implements MouseListener {
                     for (int j = -1; j <= 1; j++) {
                         if (tile.getNumber() == 0) {
                             try {
-                                buttonClicked(x + i, y + j);
+                                buttonLeftClicked(x + i, y + j);
                             } catch (Exception e) {
                                 // Do nothing
                             }
@@ -266,8 +285,9 @@ public class Minesweeper extends JFrame implements MouseListener {
                     resetBoard();
                     run();
                 } else {
+                    tile.setRevealed(true);
                     tile.setIcon(new ImageIcon(mine));
-                    tile.setBackground(Color.RED);
+                    tile.setBackground(Color.YELLOW);
 
                     gameEnd(false);
                 }
@@ -290,7 +310,41 @@ public class Minesweeper extends JFrame implements MouseListener {
         updateFlags();
     }
 
-    // right click mouse event
+    // when tile is middle-clicked (quick reveal)
+    public void buttonMiddleClicked(int x, int y) {
+        // quick reveal code
+        MineButton tile = tiles[x][y];
+
+        // count flags around tile
+        int f = 0;
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                try {
+                    MineButton tile2 = tiles[x+i][y+j];
+                    if (tile2.isFlagged()) {
+                        f++;
+                    }
+                } catch (Exception e) {
+                    // do nothing
+                }
+            }
+        }
+
+        // quick reveal
+        if (tile.getNumber() == f && tile.isRevealed()) {
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    try {
+                        buttonLeftClicked(x+i, y+j);
+                    } catch (Exception e) {
+                        // do nothing
+                    }
+                }
+            }
+        }
+    }
+
+    // mouse events
     @Override
     public void mouseReleased(MouseEvent e) {
         if (SwingUtilities.isRightMouseButton(e)) {
@@ -299,6 +353,18 @@ public class Minesweeper extends JFrame implements MouseListener {
             int x = Integer.parseInt(xy[0]);
             int y = Integer.parseInt(xy[1]);
             buttonRightClicked(x, y);
+        } else if (SwingUtilities.isLeftMouseButton(e)) {
+            JButton btn = (JButton) e.getSource();
+            String[] xy = btn.getName().split(" ", 2);
+            int x = Integer.parseInt(xy[0]);
+            int y = Integer.parseInt(xy[1]);
+            buttonLeftClicked(x, y);
+        } else if (SwingUtilities.isMiddleMouseButton(e)) {
+            JButton btn = (JButton) e.getSource();
+            String[] xy = btn.getName().split(" ", 2);
+            int x = Integer.parseInt(xy[0]);
+            int y = Integer.parseInt(xy[1]);
+            buttonMiddleClicked(x, y);
         }
     }
 
@@ -309,4 +375,12 @@ public class Minesweeper extends JFrame implements MouseListener {
     public void mouseEntered(MouseEvent e) {}
 
     public void mouseExited(MouseEvent e) {}
+
+    public void keyTyped(KeyEvent e) {}
+
+    public void keyPressed(KeyEvent e) {}
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+    }
 }

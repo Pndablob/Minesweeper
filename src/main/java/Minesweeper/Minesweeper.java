@@ -130,6 +130,8 @@ public class Minesweeper extends JFrame implements MouseListener {
                         tile.setIcon(new ImageIcon(mine));
                         tile.setBackground(Color.RED);
                     }
+                } else if (!tile.isMine() && tile.isFlagged()) {
+                    tile.setBackground(Color.ORANGE);
                 }
             }
         }

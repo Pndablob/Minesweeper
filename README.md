@@ -2,6 +2,10 @@
 
 Simple minesweeper game in a GUI with pre-selected and custom difficulties. The user interface is best for 1920x1080 displays.
 
+- Left click to guess
+- Right click flag
+- Middle click to quick reveal surrounding tiles
+
 #### Beginner
 9x9 with 10 mines
 
@@ -16,6 +20,3 @@ Simple minesweeper game in a GUI with pre-selected and custom difficulties. The 
 
 
 ## Feel free to report any bugs or issues
-
-## Known Issues:
-- timer has a <1% difference to internal counter

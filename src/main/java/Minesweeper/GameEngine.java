@@ -1,3 +1,4 @@
+/*
 package Minesweeper;
 
 import javax.swing.*;
@@ -18,6 +19,7 @@ class GameEngine implements ActionListener {
         String[] xy = btn.getName().split(" ", 2);
         int x = Integer.parseInt(xy[0]);
         int y = Integer.parseInt(xy[1]);
-        ms.buttonClicked(x, y);
+        ms.buttonLeftClicked(x, y);
     }
 }
+ */

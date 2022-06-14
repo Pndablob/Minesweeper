@@ -16,6 +16,3 @@ Simple minesweeper game in a GUI with pre-selected and custom difficulties. The 
 
 
 ## Feel free to report any bugs or issues
-
-## Known Issues:
-- timer has a <1% difference to internal counter
